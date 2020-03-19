@@ -150,7 +150,7 @@ The Replica dataset would not have been possible without the hard work and contr
 See the LICENSE file for details.
 
 
-### Stereomag360 Add-ons
+# Stereomag360 Add-ons
 The original ReplicaRenderer and ReplicaViewer remain the same. See above for usage.
 
 ## ODS-ODS-ERP Dataset generation
