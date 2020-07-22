@@ -7,8 +7,8 @@ layout(location = 1) in vec3 normal;
 layout(location = 2) in vec2 in_uv;
 layout(binding = 1) uniform sampler2D depthTex;
 uniform mat4 MVP;
+uniform float baseline;
 uniform vec4 clipPlane;
-
 uniform int render_jump;
 uniform int render_ods;
 
@@ -27,7 +27,6 @@ void main()
     // Offset by depth
     vec4 texel;
     float depth;
-
     if(render_jump == 1) {
         depth = textureLod(depthTex, uv, 0.0).x;
         depth = 0.299999999999999999f / (depth + 0.001f);

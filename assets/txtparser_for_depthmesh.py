@@ -50,7 +50,6 @@ def main():
     img_paths = convert2paths(images)
     print(img_paths)
     # odspair_paths = convert2paths_odspair(images)
-    #
     # odspair4mesh_paths = convert2odsnetpaths(images)
     #
     # print(img_paths)

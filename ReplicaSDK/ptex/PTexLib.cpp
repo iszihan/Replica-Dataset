@@ -170,6 +170,7 @@ void PTexMesh::RenderSubMeshDepth(
     const float depthScale,
     const Eigen::Vector4f& clipPlane,
     int lrC ) {
+
   ASSERT(subMesh < meshes.size());
   Mesh& mesh = *meshes[subMesh];
 
@@ -233,7 +234,9 @@ void PTexMesh::RenderSubMeshDepth(
     mesh.vbo.Unbind();
 
     mesh.ibo.Bind();
+
     glDrawElements(GL_QUADS, mesh.ibo.num_elements, mesh.ibo.datatype, 0);
+
     mesh.ibo.Unbind();
 
     // mesh.ibo.Bind();
@@ -244,7 +247,6 @@ void PTexMesh::RenderSubMeshDepth(
     glDisableVertexAttribArray(0);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, 0);
     depthShader.Unbind();
-
     glPopAttrib();
 
 

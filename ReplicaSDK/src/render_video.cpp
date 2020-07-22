@@ -28,6 +28,7 @@ int main(int argc, char* argv[]) {
   bool noTxtFile = std::string(argv[4]).compare(std::string("n")) == 0 || !pangolin::FileExists(std::string(argv[4]));
   bool spherical = std::string(argv[5]).compare(std::string("y")) == 0;
   ASSERT(spherical, "This code only render spherical images.");
+  
   int width = std::stoi(std::string(argv[7]));
   int height = std::stoi(std::string(argv[8]));
 

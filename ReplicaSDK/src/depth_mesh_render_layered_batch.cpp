@@ -21,7 +21,7 @@ std::vector<std::string> split(std::string str, char delimiter) {
 
 int main(int argc, char* argv[]) {
   // Command line args
-  ASSERT(argc==8, "Usage: ./ReplicaViewer TEST_FILES CAMERA_POSES OUT_DIR SPHERICAL WIDTH HEIGHT START");
+  ASSERT(argc==9, "Usage: ./ReplicaViewer TEST_FILES CAMERA_POSES OUT_DIR SPHERICAL WIDTH HEIGHT START END");
 
   const std::string data_file = std::string(argv[1]);
   const std::string camera_poses_file(argv[2]);
@@ -32,6 +32,8 @@ int main(int argc, char* argv[]) {
   int width = std::stoi(std::string(argv[5]));
   int height = std::stoi(std::string(argv[6]));
   int start = std::stoi(std::string(argv[7]));
+  int end = std::stoi(std::string(argv[8]));
+  assert(start-end<100 && "Current setup might crash with more than 100 frames to render. :(");
   std::cout << width << std::endl;
   std::cout << height << std::endl;
 
@@ -41,23 +43,19 @@ int main(int argc, char* argv[]) {
   std::vector<std::vector<float>> camera_poses;
 
   int c = 0;
-
   while(std::getline(in_cam,line)){
     float value;
     std::stringstream ss(line);
     camera_poses.push_back(std::vector<float>());
-
     while(ss >> value){
       camera_poses[c].push_back(value);
     }
-
     ++c;
   }
 
   // Get test files
   std::fstream in_data(data_file);
   std::vector<std::vector<std::string>> test_files;
-
   while(std::getline(in_data, line)){
     std::vector<std::string> files = split(line, ' ');
     test_files.push_back(files);
@@ -87,6 +85,28 @@ int main(int argc, char* argv[]) {
           100.0f),
       pangolin::ModelViewLookAtRDF(0, 0, 0, 0, 0, 1, 0, 1, 0));
 
+  if(!spherical){
+    s_cam = pangolin::OpenGlRenderState(
+        pangolin::ProjectionMatrixRDF_TopLeft(
+            width,
+            height,
+            width / 4.0f,
+            width / 4.0f,
+            (width - 1.0f) / 2.0f,
+            (height - 1.0f) / 2.0f,
+            0.1f,
+            100.0f),
+        pangolin::ModelViewLookAtRDF(0, 0, 0, 0, 0, 1, 0, -1, 0));
+
+    //rotate camera by 270 degree
+    Eigen::Transform<double,3,Eigen::Affine> t(Eigen::AngleAxis<double>(1.5*M_PI,Eigen::Vector3d::UnitY()));
+    Eigen::Matrix4d R_side=Eigen::Matrix4d::Identity();
+    R_side=t.matrix();
+    Eigen::Matrix4d curr_spot_cam_to_world = s_cam.GetModelViewMatrix();
+    Eigen::Matrix4d T_camera_world = R_side.inverse() * curr_spot_cam_to_world ;
+    s_cam.GetModelViewMatrix() = T_camera_world;
+  }
+
   const std::string shadir = STR(SHADER_DIR);
 
   // FBOs
@@ -106,7 +126,7 @@ int main(int argc, char* argv[]) {
   // Save default model view matrix
   Eigen::Matrix4d spot_cam_to_world = s_cam.GetModelViewMatrix();
 
-  for(int i = start; i < camera_poses.size(); i++) {
+  for(int i = start; i < end; i++) {
     std::cout << i << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
@@ -185,10 +205,8 @@ int main(int argc, char* argv[]) {
     // Write image
     pangolin::ManagedImage<Eigen::Matrix<uint8_t, 3, 1>> image(width, height);
     color_buffer3.Download(image.ptr, GL_RGB, GL_UNSIGNED_BYTE);
-
     char filename[1000];
     snprintf(filename, 1000, "%s/out_%04d.png", out_dir.c_str(), i);
-
     pangolin::SaveImage(
         image.UnsafeReinterpret<uint8_t>(),
         pangolin::PixelFormatFromString("RGB24"),
@@ -197,5 +215,3 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
-
-

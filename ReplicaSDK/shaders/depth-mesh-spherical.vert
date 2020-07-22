@@ -24,6 +24,7 @@ void main()
 {
     // Get position on the sphere from uv coordinates
     vec2 uv = vec2(1 - in_uv.x, in_uv.y);
+
     vec3 p = vec3(sin(M_PI * uv.y) * cos(2 * M_PI * uv.x),
         cos(M_PI * uv.y),
         sin(M_PI * uv.y) * sin(2 * M_PI * uv.x));
@@ -56,13 +57,13 @@ void main()
     p = (MV * vec4(p, 1)).xyz;
 
     // Angles from direction vector
-    float theta = - atan(p.z, p.x);
-    float phi = - atan(p.y, sqrt(p.x * p.x + p.z * p.z));
+    float theta = atan(p.z, p.x);
+    float phi = atan(p.y, sqrt(p.x * p.x + p.z * p.z));
 
     // Normalize to clip space
     vec4 pos;
-    pos.x = (-theta / (M_PI) + 0.0) * 1;
-    pos.y = (-phi / (M_PI / 2) + 0.0) * 1;
+    pos.x = (theta / (M_PI) + 0.0) * 1; // -1 to 1
+    pos.y = (phi / (M_PI / 2) + 0.0) * 1; // -1 to 1
     pos.z = abs(length(p.xyz)) / 20;
     pos.w = 1;
 
@@ -73,6 +74,6 @@ void main()
     gl_ClipDistance[0] = 1;
 
     // Frag uv
-    vs_out.uv = in_uv;
-    vs_out.uv_screen = (gl_Position.xy / gl_Position.w + 1) / 2;
+    vs_out.uv = in_uv; // 0 to 1
+    vs_out.uv_screen = (gl_Position.xy / gl_Position.w + 1) / 2; // turns [-1,1] to [0,1]
 }

@@ -47,7 +47,6 @@ int main(int argc, char* argv[]) {
   std::vector<std::vector<float>> camera_poses;
 
   int c = 0;
-
   while(std::getline(in_cam,line)){
     float value;
     std::stringstream ss(line);
@@ -108,13 +107,23 @@ int main(int argc, char* argv[]) {
       pangolin::ProjectionMatrixRDF_TopLeft(
           width,
           height,
-          width / 2.0f,
-          width / 2.0f,
+          width / 4.0f,
+          width / 4.0f,
           (width - 1.0f) / 2.0f,
           (height - 1.0f) / 2.0f,
           0.1f,
           100.0f),
-      pangolin::ModelViewLookAtRDF(0, 0, 0, 0, 0, 1, 0, 1, 0));
+      pangolin::ModelViewLookAtRDF(0, 0, 0, 0, 0, 1, 0, -1, 0));
+
+  if(!spherical){
+    //rotate camera by 90 degree
+    Eigen::Transform<double,3,Eigen::Affine> t(Eigen::AngleAxis<double>(1.5*M_PI,Eigen::Vector3d::UnitY()));
+    Eigen::Matrix4d R_side=Eigen::Matrix4d::Identity();
+    R_side=t.matrix();
+    Eigen::Matrix4d curr_spot_cam_to_world = s_cam.GetModelViewMatrix();
+    Eigen::Matrix4d T_camera_world = R_side.inverse() * curr_spot_cam_to_world ;
+    s_cam.GetModelViewMatrix() = T_camera_world;
+  }
 
   const std::string shadir = STR(SHADER_DIR);
 
@@ -171,7 +180,11 @@ int main(int argc, char* argv[]) {
     int status = system(dir);
 
     char filename[1000];
-    snprintf(filename, 1000, "%s/%04d/output_tgt_%04d.png", out_dir.c_str(), i, i);
+    if(spherical){
+      snprintf(filename, 1000, "%s/%04d/output_tgt_%04d.png", out_dir.c_str(), i, i);
+    }else{
+      snprintf(filename, 1000, "%s/%04d/output_ptgt_%04d.png", out_dir.c_str(), i, i);  
+    }
 
     pangolin::SaveImage(
         image.UnsafeReinterpret<uint8_t>(),

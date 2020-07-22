@@ -42,6 +42,7 @@ class DepthMesh {
   void SetSaturation(const float& val);
 
   void SetBaseline(const float& val);
+  
   static std::shared_ptr<Shape> GenerateMeshData(int width, int height, bool renderSpherical);
 
  private:

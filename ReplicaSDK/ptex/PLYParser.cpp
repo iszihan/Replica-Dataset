@@ -201,7 +201,6 @@ void PLYParse(MeshData& meshData, const std::string& filename) {
   size_t positionOffsetBytes = 0;
   size_t normalOffsetBytes = 0;
   size_t colorOffsetBytes = 0;
-
   size_t offsetSoFarBytes = 0;
 
   for (size_t i = 0; i < vertexLayout.size(); i++) {

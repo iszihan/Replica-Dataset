@@ -15,11 +15,14 @@ int main(int argc, char* argv[]) {
   const std::string colorFile = prefix + ".png";
   const std::string depthFile = prefix + "D.png";
   const std::string alphaFile = prefix + "A.png";
+
   const std::string bgColorFile = prefix + "_BG.png";
   const std::string bgDepthFile = prefix + "_BGD.png";
   const std::string bgAlphaFile = prefix + "_BGA.png";
+
   const std::string inpColorFile = prefix + "_BG_inp.png";
   const std::string inpDepthFile = prefix + "_BGD_inp.png";
+
   const std::string sphericalArg = std::string(argv[3]);
   bool spherical = sphericalArg.compare(std::string("y")) == 0;
 
@@ -151,4 +154,3 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
-
