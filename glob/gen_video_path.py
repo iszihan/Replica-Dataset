@@ -14,7 +14,31 @@ import math
 import csv
 import sys
 import argparse
-from random import randint
+import numpy as np
+import random
+def get_3dof_target_offset():
+    target_pos = []
+    box_size = 0.36
+    baseline = random.uniform(0.064,0.24)
+
+    # for interpolated image
+    inter_transx = random.uniform(0.02,baseline/2)
+    inter_transy = random.uniform(-box_size/2, box_size/2)
+    inter_transz = random.uniform(-box_size/2, box_size/2)
+    target_pos.append([inter_transx, inter_transy, inter_transz])
+
+    extra_transx = np.random.uniform(baseline/2,box_size/2)
+    extra_transy = random.uniform(-box_size/2, box_size/2)
+    extra_transz = random.uniform(-box_size/2, box_size/2)
+    target_pos.append([extra_transx, extra_transy, extra_transz])
+
+    extra_transx2 = np.random.uniform(baseline/2,box_size/2)
+    extra_transy2 = random.uniform(-box_size/2, box_size/2)
+    extra_transz2 = random.uniform(-box_size/2, box_size/2)
+    target_pos.append([extra_transx2, extra_transy2, extra_transz2])
+
+    #randomly choose one for video data
+    return target_pos[random.randint(0,2)]
 
 def gen_time_series(filename):
     time_series = []
@@ -39,22 +63,14 @@ def gen_straight_path(scene_name, steps, baseline, slope, moveDirection, noise, 
     -noise: True or false
     -moveFactor
     '''
-
+    # samples a random valid starting position
     scenePos = open(scene_name+".txt", "r")
     data = [[float(i) for i in line.split()] for line in scenePos]
-
-    # samples a random valid starting position
-    idx = randint(0, len(data))
+    idx = random.randint(0, len(data))
     cx = data[idx][0];
     cy = data[idx][1];
     cz = data[idx][2];
-
-    # default target offset times specified moveFactor
-    offset_x = 0.064 * moveFactor
-    offset_y = 0.064 * moveFactor
-    offset_z = 0.064 * moveFactor
-
-    print("Sampled starting position:", cx, cy, cz, "with baseline of ",baseline, "and offset by ", offset_x, offset_y, offset_z)
+    print("Sampled starting position:", cx, cy, cz, "with baseline of ",baseline)
 
     if(noise):
         time_series = gen_time_series('noise/data.csv')
@@ -71,9 +87,10 @@ def gen_straight_path(scene_name, steps, baseline, slope, moveDirection, noise, 
 
     navigable_positions = []
     for i in range(steps):
+        curr_offset = get_3dof_target_offset()
         spot = []
         if(moveDirection=='x'):
-            # hardcoded
+            # hardcoded incremental step
             cx += 0.005
             # append camera world position
             if(noise):
@@ -81,24 +98,25 @@ def gen_straight_path(scene_name, steps, baseline, slope, moveDirection, noise, 
             else:
                 spot += [cx, cy, cz+1.0]
         else:
-            # hardcoded
+            # hardcoded incremental step
             cy -= 0.005
             # append camera world position
             if(noise):
                 spot += [cx+ytime_series[i]-i*slope/steps, cy, cz+ztime_series[i]+1.0]
             else:
                 spot += [cx, cy, cz+1.0]
+
         # Append camera look-at position, baseline, rotation, and target offsets
         if(noise):
             spot += [1, 1, cz+ztime_series[i]+1.0]
             spot += [baseline]
             spot += [radx[i], rady[i], radz[i]]
-            spot += [offset_x, offset_y, offset_z]
+            spot += [curr_offset[0], curr_offset[1], curr_offset[2]]
         else:
             spot += [cx, cy+1, cz+1]
             spot += [baseline]
             spot += [0, 0, 0]
-            spot += [offset_x, offset_y, offset_z]
+            spot += [curr_offset[0], curr_offset[1], curr_offset[2]]
         navigable_positions.append(spot)
     with open(file2save,'w') as f:
         f.writelines(' '.join(str(j) for j in i) +'\n' for i in navigable_positions)
@@ -109,7 +127,7 @@ def gen_square_path(scene_name, steps, baseline, noise, moveFactor, file2save):
     data = [[float(i) for i in line.split()] for line in scenePos]
 
     # samples a random valid starting position
-    idx = randint(0, len(data))
+    idx = random.randint(0, len(data))
     cx = data[idx][0];
     cy = data[idx][1];
     cz = data[idx][2] - 1.5;
@@ -188,7 +206,7 @@ def gen_circle_path(scene_name, steps, baseline, r, noise, moveFactor, file2save
     data = [[float(i) for i in line.split()] for line in scenePos]
 
     #samples a random valid starting position
-    idx = randint(0, len(data))
+    idx = random.randint(0, len(data))
     cx = data[idx][0];
     cy = data[idx][1];
     cz = data[idx][2] - 1.5;
