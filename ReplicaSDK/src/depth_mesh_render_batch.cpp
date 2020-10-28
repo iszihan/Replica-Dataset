@@ -107,16 +107,28 @@ int main(int argc, char* argv[]) {
       pangolin::ProjectionMatrixRDF_TopLeft(
           width,
           height,
-          width / 4.0f,
-          width / 4.0f,
+          width / 2.0f,
+          width / 2.0f,
           (width - 1.0f) / 2.0f,
           (height - 1.0f) / 2.0f,
           0.1f,
           100.0f),
-      pangolin::ModelViewLookAtRDF(0, 0, 0, 0, 0, 1, 0, -1, 0));
+      pangolin::ModelViewLookAtRDF(0, 0, 0, 0, 0, 1, 0, 1, 0));
 
   if(!spherical){
     //rotate camera by 90 degree
+    pangolin::OpenGlRenderState s_cam(
+        pangolin::ProjectionMatrixRDF_TopLeft(
+            width,
+            height,
+            width / 4.0f,
+            width / 4.0f,
+            (width - 1.0f) / 2.0f,
+            (height - 1.0f) / 2.0f,
+            0.1f,
+            100.0f),
+        pangolin::ModelViewLookAtRDF(0, 0, 0, 0, 0, 1, 0, -1, 0));
+
     Eigen::Transform<double,3,Eigen::Affine> t(Eigen::AngleAxis<double>(1.5*M_PI,Eigen::Vector3d::UnitY()));
     Eigen::Matrix4d R_side=Eigen::Matrix4d::Identity();
     R_side=t.matrix();
@@ -183,7 +195,7 @@ int main(int argc, char* argv[]) {
     if(spherical){
       snprintf(filename, 1000, "%s/%04d/output_tgt_%04d.png", out_dir.c_str(), i, i);
     }else{
-      snprintf(filename, 1000, "%s/%04d/output_ptgt_%04d.png", out_dir.c_str(), i, i);  
+      snprintf(filename, 1000, "%s/%04d/output_ptgt_%04d.png", out_dir.c_str(), i, i);
     }
 
     pangolin::SaveImage(

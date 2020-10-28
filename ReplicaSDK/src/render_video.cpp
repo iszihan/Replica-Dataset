@@ -22,13 +22,13 @@ int main(int argc, char* argv[]) {
 
   auto model_start = high_resolution_clock::now();
 
-  ASSERT(argc == 9, "Usage: ./Path/to/ReplicaViewer mesh.ply textures glass.sur[glass.sur/n] cameraPositions.txt[file.txt/n] spherical[y/n] outputDir width height");
-
+  ASSERT(argc == 10, "Usage: ./Path/to/ReplicaViewer mesh.ply textures glass.sur[glass.sur/n] cameraPositions.txt[file.txt/n] spherical[y/n] outputDir width height saveParameter[y/n]");
   bool noSurfaceFile = std::string(argv[3]).compare(std::string("n")) == 0 || !pangolin::FileExists(std::string(argv[3]));
   bool noTxtFile = std::string(argv[4]).compare(std::string("n")) == 0 || !pangolin::FileExists(std::string(argv[4]));
   bool spherical = std::string(argv[5]).compare(std::string("y")) == 0;
+  bool saveParameter = std::string(argv[9]).compare(std::string("y")) == 0;
   ASSERT(spherical, "This code only render spherical images.");
-  
+
   int width = std::stoi(std::string(argv[7]));
   int height = std::stoi(std::string(argv[8]));
 
@@ -74,7 +74,6 @@ int main(int argc, char* argv[]) {
       float value;
       std::stringstream ss(line);
       cameraPos.push_back(std::vector<float>());
-
       while(ss>>value){
       cameraPos[i].push_back(value);
       }
@@ -82,9 +81,7 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  bool saveParameter = false;
   std::vector<std::vector<float>> camPostoSave;
-
   bool renderDepth = true;
   float depthScale = 65535.0f * 0.1f;
 
@@ -225,7 +222,8 @@ int main(int argc, char* argv[]) {
                pangolin::PixelFormatFromString("RGB24"),
                std::string(filename));
              }
-       if (saveParameter) {
+
+       if (saveParameter && k==0) {
          //calculate and save the quaternion
          T_camera_world = s_cam.GetModelViewMatrix();
          Eigen::Matrix4d cam_matrix = T_camera_world.inverse();
@@ -233,6 +231,7 @@ int main(int argc, char* argv[]) {
          Eigen::Vector3d right_after = cam_matrix.block(0,0,3,1);
          Eigen::Vector3d up_after = cam_matrix.block(0,1,3,1);
 
+         //find the quaternion
          right_after.normalized();
          double theta = forward_after.dot(up_after);
          double angle_rotation = -1.0*acos(theta);
@@ -249,41 +248,30 @@ int main(int argc, char* argv[]) {
            std::cout<<std::endl;
          }
 
+         //add the camera location
          camPostoSave.push_back(std::vector<float>());
          camPostoSave[j].push_back(cameraPos[j][0]);
          camPostoSave[j].push_back(cameraPos[j][1]);
          camPostoSave[j].push_back(cameraPos[j][2]);
 
-         //save the quaternion
+         //add the quaternion
          // camPostoSave[step].push_back(q.x());
          // camPostoSave[step].push_back(q.y());
          // camPostoSave[step].push_back(q.z());
          // camPostoSave[step].push_back(q.w());
 
+        //add the camera matrix in column-major order
          for(int r = 0; r<4; r++){
            for(int c = 0; c<4; c++){
              camPostoSave[j].push_back(T_camera_world(r,c));
            }
          }
+
+         //add the focal length
          camPostoSave[j].push_back(width/2);
          camPostoSave[j].push_back(width/2);
 
-         char parameter_filename[1000];
-         snprintf(parameter_filename, 1000, "%s/%s_parameters.txt", outputDir.c_str(), scene.c_str());
-
-         std::ofstream myfile(parameter_filename);
-         if(myfile.is_open()){
-           for(int j=0;j<numFrames;j++){
-             std::cout<<"hello";
-             myfile<<j<<" ";
-
-             for(int e = 0; e < camPostoSave[j].size(); e++){
-               myfile<<camPostoSave[j][e]<<" ";
-             }
-             myfile<<std::endl;
-           }
-           myfile.close();
-         }
+         //reset saveParameter to false
        }
      }
 
@@ -314,7 +302,20 @@ int main(int argc, char* argv[]) {
        continue;
      }
      std::cout << "\r Spot " << j + 1  << "/" << numFrames << std::endl;
+  }
 
+  char parameter_filename[1000];
+  snprintf(parameter_filename, 1000, "%s/%s_parameters.txt", outputDir.c_str(), scene.c_str());
+  std::ofstream myfile(parameter_filename);
+  if(myfile.is_open()){
+    for(int t = 0; t < numFrames; t++){
+      myfile<<t<<" ";
+      for(int e = 0; e < camPostoSave[t].size(); e++){
+        myfile<<camPostoSave[t][e]<<" ";
+      }
+      myfile<<std::endl;
+    }
+    myfile.close();
   }
 
   auto model_stop = high_resolution_clock::now();

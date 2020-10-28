@@ -25,7 +25,6 @@ def gen_time_series(filename):
             if line_count==0:
                 line_count+=1
             else:
-                # print(row[0],row[1])
                 time_series.append(float(row[1]))
                 line_count+=1
     return time_series
@@ -44,13 +43,13 @@ def gen_straight_path(scene_name, steps, baseline, slope, moveDirection, noise, 
     scenePos = open(scene_name+".txt", "r")
     data = [[float(i) for i in line.split()] for line in scenePos]
 
-    #samples a random valid starting position
+    # samples a random valid starting position
     idx = randint(0, len(data))
     cx = data[idx][0];
     cy = data[idx][1];
     cz = data[idx][2];
 
-    #default target offset times specified moveFactor
+    # default target offset times specified moveFactor
     offset_x = 0.064 * moveFactor
     offset_y = 0.064 * moveFactor
     offset_z = 0.064 * moveFactor
@@ -63,36 +62,32 @@ def gen_straight_path(scene_name, steps, baseline, slope, moveDirection, noise, 
         time_series_yradian = gen_time_series('noise/data-roty.csv')
         time_series_zradian = gen_time_series('noise/data.csv')
 
-        #normalize
+        # normalize
         ztime_series = [(x - time_series[0])/10 for x in time_series]
         ytime_series = [(x - time_series[0])/25 for x in time_series]
         radx = [((x - time_series_xradian[0])/7) for x in time_series_xradian]
         rady = [((x - time_series_yradian[0])/7) for x in time_series_yradian]
         radz = [((x - time_series_zradian[0])/7) for x in time_series_zradian]
 
-
     navigable_positions = []
     for i in range(steps):
         spot = []
         if(moveDirection=='x'):
-            #hardcoded increment
+            # hardcoded
             cx += 0.005
-
-            #Append camera world position
+            # append camera world position
             if(noise):
                 spot += [cx, cy+ytime_series[i]-i*slope/steps, cz+ztime_series[i]+1.0]
             else:
                 spot += [cx, cy, cz+1.0]
         else:
-            #hardcoded
+            # hardcoded
             cy -= 0.005
-
-            #Append camera world position
+            # append camera world position
             if(noise):
                 spot += [cx+ytime_series[i]-i*slope/steps, cy, cz+ztime_series[i]+1.0]
             else:
                 spot += [cx, cy, cz+1.0]
-
         # Append camera look-at position, baseline, rotation, and target offsets
         if(noise):
             spot += [1, 1, cz+ztime_series[i]+1.0]
@@ -104,9 +99,7 @@ def gen_straight_path(scene_name, steps, baseline, slope, moveDirection, noise, 
             spot += [baseline]
             spot += [0, 0, 0]
             spot += [offset_x, offset_y, offset_z]
-
         navigable_positions.append(spot)
-
     with open(file2save,'w') as f:
         f.writelines(' '.join(str(j) for j in i) +'\n' for i in navigable_positions)
 
@@ -115,26 +108,26 @@ def gen_square_path(scene_name, steps, baseline, noise, moveFactor, file2save):
     scenePos = open(scene_name+".txt", "r")
     data = [[float(i) for i in line.split()] for line in scenePos]
 
-    #samples a random valid starting position
+    # samples a random valid starting position
     idx = randint(0, len(data))
     cx = data[idx][0];
     cy = data[idx][1];
     cz = data[idx][2] - 1.5;
 
-    #default target offset times specified moveFactor
+    # default target offset times specified moveFactor
     offset_x = 0.064 * moveFactor
     offset_y = 0.064 * moveFactor
     offset_z = 0.064 * moveFactor
 
     print("Sampled starting position:", cx, cy, cz, "with baseline of ",baseline, "and offset by ", offset_x, offset_y, offset_z)
     if(noise):
-        #Noise not implemented for square path..
+        # Noise not implemented for square path..
         time_series = gen_time_series('noise/data.csv')
         time_series_xradian = gen_time_series('noise/data-rotx.csv')
         time_series_yradian = gen_time_series('noise/data-roty.csv')
         time_series_zradian = gen_time_series('noise/data.csv')
 
-        #normalize
+        # normalize
         ztime_series = [(x - time_series[0])/10 for x in time_series]
         ytime_series = [(x - time_series[0])/25 for x in time_series]
         radx = [((x - time_series_xradian[0])/7) for x in time_series_xradian]
@@ -143,7 +136,7 @@ def gen_square_path(scene_name, steps, baseline, noise, moveFactor, file2save):
 
     navigable_positions = []
     side_steps = steps//4
-    corner_steps = 60 #hardcoded
+    corner_steps = 60 # hardcoded
     for j in range(side_steps):
         spot = []
         cx += 0.01
@@ -151,7 +144,7 @@ def gen_square_path(scene_name, steps, baseline, noise, moveFactor, file2save):
         navigable_positions.append(spot)
 
     for k in range(corner_steps):
-        spot=[]
+        spot = []
         spot += [cx, cy, cz, cx+math.cos((float(k)/60)*(math.pi/2)), cy+math.sin((float(k)/60)*(math.pi/2)), cz,
                 baseline, 0, 0, 0, offset_x, offset_y, offset_z]
         navigable_positions.append(spot)
@@ -219,6 +212,9 @@ def gen_circle_path(scene_name, steps, baseline, r, noise, moveFactor, file2save
         radx = [((x - time_series_xradian[0])/7) for x in time_series_xradian]
         rady = [((x - time_series_yradian[0])/7) for x in time_series_yradian]
         radz = [((x - time_series_zradian[0])/7) for x in time_series_zradian]
+    else:
+        time_series = gen_time_series('noise/data.csv')
+        ztime_series = [0 for x in time_series]
 
     navigable_positions = []
     for i in range(steps):
@@ -231,7 +227,7 @@ def gen_circle_path(scene_name, steps, baseline, r, noise, moveFactor, file2save
 
         spot += [nx, ny, nz+ztime_series[i]]
         spot += [nx + (nx-cx), ny + (ny-cy), cz+ztime_series[i]]
-        spot += baseline
+        spot += [baseline]
         if(noise):
             spot += [radx[i], rady[i], radz[i]]
         else:
@@ -269,7 +265,6 @@ def main():
     args = parser.parse_args()
 
     if(args.pathtype=='straight'):
-
         gen_straight_path(args.scene, args.nsteps, args.baseline, 0.5, args.moveDir, args.noise , args.moveFactor, args.output)
     elif(args.pathtype=='circle'):
         gen_circle_path(args.scene, args.nsteps, args.baseline, args.radius, args.noise, args.moveFactor, args.output)
